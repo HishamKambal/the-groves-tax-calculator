@@ -1,75 +1,155 @@
-# The Groves — Inclusive Tax Calculator (Flutter + Firebase)
+# The Groves — Inclusive Tax Calculator (Flutter + Hive + Firebase)
 
-A production-quality Flutter application that reverse-calculates tax breakdowns from **inclusive retail prices** (final price paid by the customer, including taxes). Built to support Saudi Arabia’s common item categories:
+Production-quality Flutter application that reverse-calculates tax breakdowns from **inclusive retail prices** (final price paid by the customer, including taxes). The app targets Saudi Arabia-style scenarios:
 
 - **Regular items:** 15% VAT only  
 - **Tobacco products:** 100% excise tax on base + 15% VAT applied to (base + excise)
 
-The app supports adding multiple mixed items, displays per-item breakdowns, computes accurate grand totals, provides local persistence, and includes **optional cross-device history sync** using Firebase Authentication + Firestore.
+Supports mixed carts, per-item breakdown, grand totals, local persistence, and optional cross-device history sync using Firebase Authentication + Firestore.
 
 ---
 
-## Features
+## Key Features
 
-### Core
-- Add items by **inclusive price** with validation
-- Select item type: **Regular** / **Tobacco**
+### Core (Assessment Requirements)
+- Add items by **inclusive price**
+- Item type selection: **Regular** / **Tobacco**
 - Per-item breakdown: **Base / Excise / VAT / Total Tax**
-- Grand totals: **Inclusive / Base / Excise / VAT / Total Tax**
-- Clear / reset cart
-- Dark mode support (Material 3)
+- Grand totals: **Total Inclusive / Base / Excise / VAT / Total Tax**
+- Clear/Reset cart
+- Input validation + error handling
+- Material 3 UI with **dark mode support**
 
 ### Persistence
 - Local persistence using **Hive**
   - Cart persistence
   - History persistence
-  - Settings persistence (currency, rates, theme mode)
+  - Settings persistence (currency, tax config, theme mode)
 
-### Bonus / Highly Valued All DONE
-- **History screen** with history detail view
-- **Configurable tax rates** in Settings
-- Pie chart visualization of totals breakdown (fl_chart)
-- **Firebase Auth + Firestore sync** for history across devices
+### Bonus (Delivered)
+- History screen + history detail view
+- Configurable tax rates and multiplier via Settings
+- Pie chart visualization (fl_chart)
+- Firebase Auth (email/password)
+- Firestore sync of history across devices (signed-in users)
 - Unit tests for tax calculation logic
 
 ---
 
-## Tax formulas (must be accurate)
+## Tax Formulas (Reverse Calculation)
 
-### Regular item (15% VAT)
+### Regular Item (15% VAT)
 Given inclusive price **P**:
 
-- Base = P ÷ 1.15
-- VAT = P − Base
+- **Base** = P ÷ 1.15  
+- **VAT** = P − Base  
 
-### Tobacco item (100% excise + VAT on base+excise)
+### Tobacco (100% Excise + 15% VAT on Base+Excise)
 Excise is 100% of base, and VAT is applied to (base + excise).
 
-- Total multiplier (in this implementation): configurable in Settings (default **2.30** for assessment)
-- Base = P ÷ multiplier
-- Excise = Base × 1.00
-- VAT = (Base + Excise) × 0.15
-- Total tax = Excise + VAT
-- Inclusive = Base + Excise + VAT = P
+- Multiplier is configurable via Settings (assessment default: **2.30**)
+- **Base** = P ÷ multiplier  
+- **Excise** = Base × 1.00  
+- **VAT** = (Base + Excise) × 0.15  
+- **Total Tax** = Excise + VAT  
+- Inclusive check: Base + Excise + VAT = P
 
-> Note: Rates and tobacco multiplier are configurable via Settings for flexibility.
+> Note: Rates and multiplier are configurable via Settings for flexibility.
 
 ---
 
-## Architecture
+## Architecture & Code Quality
 
-- Flutter + Material 3 UI
-- Riverpod state management (Notifier + Providers)
+- **Flutter + Material 3**
+- **Riverpod** state management (Notifier + Providers)
 - Clean separation by feature:
-  - `domain/` models & services (pure logic)
-  - `data/` local persistence repositories (Hive) + remote store (Firestore)
-  - `presentation/` screens, widgets, providers
+  - `domain/` → business models and pure logic (TaxCalculator)
+  - `data/` → persistence and repositories  
+    - local: Hive stores
+    - remote: Firestore remote history store
+  - `presentation/` → screens, widgets, providers
 
-The tax calculator logic is isolated in the domain layer and covered by unit tests.
+The tax calculator logic is isolated and unit-tested.
 
 ---
 
-## Setup (Local)
+## Firebase / Firestore Security
+
+Firestore is locked down so users can only access their own records:
+
+- Paths use: `/users/{uid}/histories/{historyId}`
+- Access restricted to: `request.auth.uid == uid`
+- Basic schema validation to prevent malformed writes
+
+---
+
+## Screenshots
+
+### Cart / Inputs / Totals
+- Cart (empty)  
+  ![Cart Empty](assets/screenshots/cart-empty.jpg)
+
+- Recent items  
+  ![Recent Items](assets/screenshots/recent-items.jpg)
+
+- Regular item example  
+  ![Regular Item](assets/screenshots/regular-item-example.jpg)
+
+- Tobacco item example  
+  ![Tobacco Item](assets/screenshots/tobacco-item-example.jpg)
+
+- Totals + Pie chart  
+  ![Totals Pie](assets/screenshots/totals-pie-chart.jpg)
+
+### History
+- History list  
+  ![History List](assets/screenshots/history-list.jpg)
+
+- History details (1)  
+  ![History Details 1](assets/screenshots/history-details-1.jpg)
+
+- History details (2)  
+  ![History Details 2](assets/screenshots/history-details-2.jpg)
+
+### Settings / Account / Theme
+- Settings screen  
+  ![Settings](assets/screenshots/settings-screen.jpg)
+
+- Configurable tax rates  
+  ![Configurable Tax Rates](assets/screenshots/configurable-tax-rates.jpg)
+
+- SAR & USD  
+  ![SAR USD](assets/screenshots/sar-usd.jpg)
+
+- Account screen (Auth)  
+  ![Account](assets/screenshots/account-screen.jpg)
+
+- Light mode examples  
+  ![Light Mode 1](assets/screenshots/light-mode-1.jpg)
+  ![Light Mode 2](assets/screenshots/light-mode-2.jpg)
+  ![Light Mode 3](assets/screenshots/light-mode-3.jpg)
+
+- Dark mode  
+  ![Dark Mode](assets/screenshots/dark-mode.jpg)
+
+---
+## Quick Review Guide (For Evaluators)
+
+**Fastest way to evaluate the app:**
+
+1. Download the release APK from the GitHub repository
+2. Install on any Android device or emulator
+3. Test the following flow:
+   - Add a Regular item
+   - Add a Tobacco item
+   - Verify totals and pie chart
+   - Save to history
+   - Open history details
+   - Sign in and verify history sync 
+
+Alternatively, the app can be run from source using Flutter (instructions below).
+
+## Setup & Run
 
 ### Prerequisites
 - Flutter **3.38.x**
@@ -78,16 +158,24 @@ The tax calculator logic is isolated in the domain layer and covered by unit tes
 - Firebase CLI + FlutterFire CLI (for Firebase integration)
 
 ### Install dependencies
--flutter pub get 
+- flutter pub get
 
-### Run analyzer + tests
--flutter analyze
--flutter test
+### Analyze + test 
+- flutter analyze
+- flutter test
 
-### Run on Android emulator (List emulators)
--flutter emulators
+### Run on emulator example
+- flutter emulators
+- flutter emulators --launch Pixel_6
+- flutter devices
+- flutter run -d emulator-5554
 
-### Launch (example):
--flutter emulators --launch Pixel_6
--flutter devices
--flutter run -d emulator-5554
+## Demo / APK
+
+A pre-built release APK is available:
+
+- Path: `build/app/outputs/flutter-apk/app-release.apk`
+
+For reviewer convenience, the APK can be downloaded directly from the GitHub repository.
+
+
