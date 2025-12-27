@@ -172,10 +172,5 @@ Alternatively, the app can be run from source using Flutter (instructions below)
 
 ## Demo / APK
 
-A pre-built release APK is available:
-
-- Path: `build/app/outputs/flutter-apk/app-release.apk`
-
-For reviewer convenience, the APK can be downloaded directly from the GitHub repository.
-
-
+Download the Android APK here:
+https://github.com/HishamKambal/the-groves-tax-calculator/releases
